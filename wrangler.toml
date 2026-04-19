@@ -1,0 +1,18 @@
+name = "hvp-rcm-ai"
+main = "src/worker.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "4c2932bc3381be38d5266241b16be092"
+
+[observability]
+enabled = true
+
+[[routes]]
+pattern = "rcm.ai-smith.net/*"
+zone_name = "ai-smith.net"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hvp-rcm-db"
+database_id = "47a9edb0-d471-47a9-8d69-17158b49f021"

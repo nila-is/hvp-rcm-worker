@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+*.txt
+*.log
+*.b64
+cred_check.txt
+creds.txt
+git_init.txt

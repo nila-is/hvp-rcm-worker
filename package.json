@@ -1,0 +1,13 @@
+{
+  "name": "hvp-rcm-worker",
+  "version": "1.0.0",
+  "description": "HVP RCM Rate Intelligence Platform — Cloudflare Worker + NVIDIA Nemotron NIM + D1",
+  "main": "src/worker.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
