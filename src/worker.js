@@ -12,7 +12,7 @@ async function callNIM(env, messages, max_tokens) {
   return (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || '';
 }
 async function handleHealth(env) {
-  return Response.json({ status: 'ok', model: 'nvidia/nemotron-3-super-120b-a12b', db: !!env.DB });
+  return Response.json({ status: 'ok', service: 'hvp-rcm-ai', ts: Math.floor(Date.now()/1000) });
 }
 async function handlePayers(env) {
   const r = await env.DB.prepare('SELECT id, name, plan_type as portal_type FROM payers').all();
@@ -149,7 +149,29 @@ async function doLookup(){var pid=parseInt(document.getElementById('lu-payer').v
 async function doAnalyze(){var payer=document.getElementById('ca-payer').value;var text=document.getElementById('ca-text').value;if(!text)return;var sp=document.getElementById('ca-sp');sp.style.display='inline-block';var res=document.getElementById('ca-res');res.style.display='block';res.innerHTML='<div style="color:var(--muted)">Sending to NVIDIA Nemotron NIM...</div>';try{var r=await fetch('/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({payer_name:payer,document_text:text})});var d=await r.json();var html='<div style="margin-bottom:10px"><span class="badge bok">NIM ANALYSIS COMPLETE</span></div>';if(d.parsed&&d.parsed.cpt_codes&&d.parsed.cpt_codes.length){html+='<table><thead><tr><th>CPT Code</th><th>Rate</th><th>Modifier</th></tr></thead><tbody>';html+=d.parsed.cpt_codes.map(function(c){return '<tr><td style="font-family:monospace">'+c.cpt_code+'</td><td style="color:var(--ok)">'+fmt(c.rate_dollars)+'</td><td>'+(c.modifier||'&mdash;')+'</td></tr>';}).join('');html+='</tbody></table>';}else{html+='<div class="ai-out">'+(d.raw||'No structured data extracted.')+'</div>';}res.innerHTML=html;}catch(e){res.innerHTML='<span style="color:var(--err)">Error: '+e.message+'</span>';}finally{sp.style.display='none';}}
 async function doAnomalies(){var cur,base;try{cur=JSON.parse(document.getElementById('an-cur').value);base=JSON.parse(document.getElementById('an-base').value);}catch(e){alert('Invalid JSON');return;}var ctx=document.getElementById('an-ctx').value;var sp=document.getElementById('an-sp');sp.style.display='inline-block';var res=document.getElementById('an-res');res.style.display='block';res.innerHTML='<div style="color:var(--muted)">Analyzing with NIM...</div>';try{var r=await fetch('/anomalies',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_rates:cur,baseline_rates:base,context:ctx})});var d=await r.json();var html='<div style="margin-bottom:10px">'+(d.flagged_count>0?'<span class="badge bwarn">'+d.flagged_count+' ANOMALIES FLAGGED</span>':'<span class="badge bok">NO ANOMALIES DETECTED</span>')+'</div>';html+='<table><thead><tr><th>CPT</th><th>Current</th><th>Baseline</th><th>Change</th><th>Status</th></tr></thead><tbody>';html+=d.diffs.map(function(x){var pct=(x.pct_change>0?'+':'')+x.pct_change+'%';return '<tr><td style="font-family:monospace;font-weight:600">'+x.cpt_code+'</td><td>'+fmt(x.current)+'</td><td style="color:var(--muted)">'+fmt(x.baseline)+'</td><td class="'+(x.pct_change>0?'pos':'neg')+'">'+pct+'</td><td>'+(x.flagged?'<span class="badge bwarn">\u26a0 FLAGGED</span>':'<span class="badge bok">OK</span>')+'</td></tr>';}).join('');html+='</tbody></table>';if(d.analysis)html+='<div class="ai-out">'+d.analysis+'</div>';res.innerHTML=html;}catch(e){res.innerHTML='<span style="color:var(--err)">Error: '+e.message+'</span>';}finally{sp.style.display='none';}}
 loadDashboard();loadPayers();
-</script></body></html>`;
+</script>
+<div id="wu-overlay" style="position:fixed;inset:0;background:#0a0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-family:system-ui,sans-serif;transition:opacity 0.6s ease">
+  <div style="width:48px;height:48px;border:3px solid #1e293b;border-top-color:#38bdf8;border-radius:50%;animation:wu-spin 0.8s linear infinite"></div>
+  <p id="wu-msg" style="color:#64748b;margin-top:1.5rem;font-size:0.9rem;letter-spacing:0.05em">Connecting\u2026</p>
+  <style>@keyframes wu-spin{to{transform:rotate(360deg)}}</style>
+</div>
+<script>
+(function(){
+  var msgs=["Connecting\u2026","Container starting up\u2026","Loading fee schedules\u2026","Warming up AI models\u2026","Almost ready\u2026"];
+  var el=document.getElementById('wu-msg');
+  var ov=document.getElementById('wu-overlay');
+  var i=0;
+  var tick=setInterval(function(){if(i<msgs.length-1)el.textContent=msgs[++i];},1400);
+  function probe(){
+    fetch('/health').then(function(r){
+      if(r.ok){clearInterval(tick);el.textContent='Ready \u2713';setTimeout(function(){ov.style.opacity='0';setTimeout(function(){ov.remove();},600);},350);}
+      else setTimeout(probe,900);
+    }).catch(function(){setTimeout(probe,900);});
+  }
+  probe();
+})();
+</script>
+</body></html>`;
 
 function getHTML() { return HTML_PAGE; }
 
