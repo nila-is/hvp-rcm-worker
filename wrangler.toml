@@ -8,9 +8,8 @@ account_id = "4c2932bc3381be38d5266241b16be092"
 [observability]
 enabled = true
 
-[[routes]]
-pattern = "rcm.ai-smith.net/*"
-zone_name = "ai-smith.net"
+# Routes are managed via Cloudflare dashboard (rcm.ai-smith.net/*)
+# Removed from here to avoid requiring Zone:Routes:Edit token permission in CI
 
 [[d1_databases]]
 binding = "DB"
